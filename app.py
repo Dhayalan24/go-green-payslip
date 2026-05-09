@@ -1,3 +1,5 @@
+from turtle import width
+
 import streamlit as st
 import pandas as pd
 import os
@@ -911,144 +913,185 @@ def create_pdf(data):
     <meta charset="UTF-8">
 
     <style>
-    body {{
-        font-family: 'Segoe UI', sans-serif;
-        background: #f4f6f9;
-        padding: 40px;
-    }}
 
-    .container {{
-        background: white;
-        padding: 30px;
-        border-radius: 12px;
-        width: 800px;
-        margin: auto;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    }}
+@page {{
+    size: A4;
+    margin: 12mm;
+}}
 
-    .header {{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 15px;
-    }}
+body{{
+    font-family: Arial, Helvetica, sans-serif;
+    background:#ececef;
+    margin:0;
+    padding:0;
+}}
 
-    .company {{
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }}
+.container{{
+    width: 730px;
+    margin: 20px auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 22px 26px 18px 26px;
+    box-sizing:border-box;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}}
 
-    .company img {{
-        width: 60px;
-    }}
+.header{{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    border-bottom:1px solid #dcdcdc;
+    padding-bottom:18px;
+}}
 
-    .company-details {{
-        font-size: 13px;
-        color: #555;
-    }}
+.company{{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+}}
 
-    .title {{
-        text-align: right;
-    }}
+.company img{{
+    width:42px;
+    margin-top:2px;
+}}
 
-    .net-box {{
-        width: 25%;
-    }}
+.company-text{{
+    line-height:1.35;
+}}
 
-    .right-details p {{
-        margin: 4px 0;
-    }}
+.company-title{{
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:2px;
+}}
 
-    .summary-left p {{
-        margin: 6px 0;
-    }}
+.company-address{{
+    font-size:12px;
+    color:#444;
+}}
 
-    .net-box {{
-        background: #e8f5e9;
-        border-left: 5px solid #2e7d32;
-        padding: 20px;
-        border-radius: 10px;
-        width: 220px;
-        text-align: center;
-    }}
+.title{{
+    text-align:right;
+    margin-top:55px;
+}}
 
-    .net-box h1 {{
-        margin: 0;
-        color: #1b5e20;
-    }}
-    
-    .top-table {{
-    width: 100%;
-    margin-top: 5px;
-    }}
+.title b{{
+    font-size:14px;
+}}
 
-    .left-cell {{
-        width: 60%;
-        vertical-align: top;
-        font-size: 14px;
-    }}
+.title div{{
+    font-size:14px;
+    margin-top:3px;
+}}
 
-    .right-cell {{
-        width: 40%;
-        text-align: right;
-        vertical-align: top;
-        font-size: 14px;
-    }}
+.top-table{{
+    width:100%;
+    margin-top:14px;
+    border-collapse:collapse;
+}}
 
-    .top-table p {{
-        margin: 4px 0;
-    }}
+.top-table td{{
+    vertical-align:top;
+    font-size:13px;
+    padding:2px 0;
+    border:none;
+}}
 
-    .net-container {{
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-    }}
-   
-    table {{
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 25px;
-    }}
+.left-cell{{
+    width:55%;
+}}
 
-    th {{
-        text-align: left;
-        border-bottom: 2px solid #ddd;
-        padding: 10px;
-        font-size: 13px;
-        color: #555;
-    }}
+.right-cell{{
+    width:45%;
+    text-align:right;
+}}
 
-    td {{
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-        font-size: 14px;
-    }}
+.net-container{{
+    margin-top:18px;
+    margin-bottom:18px;
+}}
 
-    .total-row {{
-        font-weight: bold;
-        background: #f9f9f9;
-    }}
+.net-box{{
+    width:210px;
+    background:#dfeadf;
+    border-left:4px solid #2f8d46;
+    border-radius:8px;
+    padding:16px 18px;
+    box-sizing:border-box;
+}}
 
-    .final {{
-        margin-top: 20px;
-        padding: 15px;
-        background: #e8f5e9;
-        border-radius: 8px;
-        display: flex;
-        justify-content: space-between;
-        font-weight: bold;
-    }}
+.net-title{{
+    font-size:13px;
+    color:#333;
+    margin-bottom:6px;
+    text-align:center;
+}}
 
-    .footer {{
-        margin-top: 30px;
-        text-align: center;
-        font-size: 12px;
-        color: gray;
-    }}
-    </style>
+.net-amount{{
+    font-size:28px;
+    font-weight:700;
+    color:#136b2c;
+    text-align:center;
+}}
+
+.salary-table{{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:8px;
+}}
+
+.salary-table th{{
+    font-size:12px;
+    color:#666;
+    font-weight:700;
+    text-align:left;
+    border-bottom:2px solid #d9d9d9;
+    padding:10px 8px;
+}}
+
+.salary-table td{{
+    font-size:13px;
+    padding:10px 8px;
+    border-bottom:1px solid #ececec;
+}}
+
+.total-row{{
+    background:#f5f5f5;
+    font-weight:700;
+}}
+
+.final{{
+    margin-top:14px;
+    background:#dfeadf;
+    padding:14px 18px;
+    border-radius:4px;
+}}
+
+.final-title{{
+    font-size:12px;
+    font-weight:700;
+}}
+
+.final-words{{
+    font-size:10px;
+    margin-top:2px;
+    color:#444;
+}}
+
+.final-amount{{
+    font-size:28px;
+    font-weight:700;
+    margin-top:2px;
+}}
+
+.footer{{
+    text-align:center;
+    margin-top:18px;
+    font-size:11px;
+    color:#888;
+}}
+
+</style>
     </head>
 
     <body>
@@ -1058,20 +1101,28 @@ def create_pdf(data):
         <div class="header">
 
             <div class="company">
-                <img src="data:image/png;base64,{logo_base64}" />
-                <div>
-                    <b style="font-size:18px;">GO-GREEN</b><br>
-                    <div class="company-details">
+
+    <img src="data:image/png;base64,{logo_base64}" />
+
+    <div class="company-text">
+
+                <div class="company-title">
+                    GO-GREEN
+                </div>
+
+                <div class="company-address">
                     No:820/9-A-1, Ramaiah Complex<br>
                     Perandapalli, Hosur<br>
                     Tamil Nadu - 635109
-                    </div>
                 </div>
+
             </div>
 
-            <div class="title">
-                <b>Payslip For the Month</b><br>
-                {data["pay_period"]}
+        </div>
+
+           <div class="title">
+                <b>Payslip For the Month</b>
+                <div>{data["pay_period"]}</div>
             </div>
 
         </div>
@@ -1102,12 +1153,21 @@ def create_pdf(data):
 
             <!-- NET PAY CENTER -->
             <div class="net-container">
+
                 <div class="net-box">
-                    <div style="font-size:13px;">Total Net Pay</div>
-                    <h1>₹ {r0(data["net_salary"])}</h1>
+
+                    <div class="net-title">
+                        Total Net Pay
+                    </div>
+
+                    <div class="net-amount">
+                        ₹ {r0(data["net_salary"])}
+                    </div>
+
                 </div>
+
             </div>
-            <table>
+            <table class="salary-table">
                 <tr>
                     <th>EARNINGS</th>
                     <th>AMOUNT</th>
@@ -1128,13 +1188,19 @@ def create_pdf(data):
             </table>
 
         <div class="final">
-            <div>
-                TOTAL NET PAYABLE<br>
-                <span style="font-size:12px; color:#555;">
-                    ({amount_in_words(r0(data["net_salary"]))})
-                </span>
+
+            <div class="final-title">
+                TOTAL NET PAYABLE
             </div>
-            <div>₹ {r0(data["net_salary"])}</div>
+
+            <div class="final-words">
+                ({amount_in_words(r0(data["net_salary"]))})
+            </div>
+
+            <div class="final-amount">
+                ₹ {r0(data["net_salary"])}
+            </div>
+
         </div>
 
         <div class="footer">
