@@ -9,9 +9,10 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.lib import colors
+from playwright.sync_api import sync_playwright
 
 st.set_page_config(page_title="Go-Green Payroll", layout="wide")
- 
+
 # --------------------------------------------------
 # UI DESIGN
 # --------------------------------------------------
@@ -83,10 +84,7 @@ input, .stTextInput input, .stNumberInput input {
 # --------------------------------------------------
 # TITLE
 # --------------------------------------------------
-
 st.title("Go-Green Payslip Generator")
-
-
 
 # --------------------------------------------------
 # EXCEL DATABASE
@@ -539,28 +537,86 @@ if working_days < 0:
     working_days = 0
 
 basic_current = r2((basic_salary / total_days) * working_days)
-da_current = r2((da_salary / total_days) * working_days)
+original_da = r2((da_salary / total_days) * working_days)
 
-earned_leave = r2((basic_current + da_current) * 0.0481)
-nh_h = r2((basic_current + da_current) * 0.0288)
+
+# Only initialize when employee exists
+if employee_id != "":
+    
+    if ("da_current" not in st.session_state) or (st.session_state.get("last_emp_da") != employee_id):
+        st.session_state.da_current = original_da
+        st.session_state.last_emp_da = employee_id
+
+    da_current = st.session_state.da_current
+else:
+    da_current = 0
 
 # -------- DISPLAY EARNINGS --------
-
 st.markdown("### Earnings")
+default_nh_h = r2((basic_current + da_current) * 0.0288)
+# ---------- NH&H EDITABLE ----------
+if "nh_h_value" not in st.session_state:
+    st.session_state.nh_h_value = default_nh_h
 
-earnings_data = [
-    ("Basic", basic_current),
-    ("Dearness Allowance", da_current),
-    ("Earned Leave (4.81%)", earned_leave),
-    ("NH & H (2.88%)", nh_h)
-]
+# Reset when employee changes
+if st.session_state.get("last_emp_nhh") != employee_id:
+    st.session_state.nh_h_value = default_nh_h
+    st.session_state.last_emp_nhh = employee_id
+
+col1, col2 = st.columns([3,1])
+col1.write("Basic")
+col2.write(f"₹ {basic_current:.2f}")
+
+col1, col2 = st.columns([3,1])
+
+col1.write("Dearness Allowance")
+
+if employee_id != "":
+    da_current = col2.number_input(
+        "DA",
+        min_value=0.0,
+        value=float(st.session_state.da_current),
+        step=10.0,
+        key="da_input",
+        label_visibility="collapsed"
+    )
+
+    st.session_state.da_current = da_current
+else:
+    col2.write("₹ 0.00")
+# Recalculate after editable DA change
+earned_leave = r2((basic_current + da_current) * 0.0481)
+
+# BONUS 8.33% using updated DA
+bonus = r2((basic_current + da_current) * 0.0833)
+
+# NH&H default using updated DA
+
+col1, col2 = st.columns([3,1])
+col1.write("Earned Leave (4.81%)")
+col2.write(f"₹ {earned_leave:.2f}")
+
+# BONUS
+col1, col2 = st.columns([3,1])
+col1.write("Bonus (8.33%)")
+col2.write(f"₹ {bonus:.2f}")
+
+# NH&H Editable
+col1, col2 = st.columns([3,1])
+
+col1.write("NH & H")
+
+nh_h = col2.number_input(
+    "NH&H",
+    value=float(st.session_state.nh_h_value),
+    step=0.01,
+    key="nh_h_input",
+    label_visibility="collapsed"
+)
+
+st.session_state.nh_h_value = nh_h
 
 extra_earnings = []
-
-for name, amount in earnings_data:
-    col1, col2 = st.columns([3,1])
-    col1.write(name)
-    col2.write(f"₹ {amount:.2f}")
 
 # ➕ Add Extra Earnings
 if "extra_earnings" not in st.session_state:
@@ -674,6 +730,7 @@ gross = r2(
     basic_current +
     da_current +
     earned_leave +
+    bonus +
     nh_h +
     sum(e["amount"] for e in st.session_state.extra_earnings)
 )
@@ -712,13 +769,10 @@ def r(val):
 
 def format_currency(val):
     return f"Rs. {val:,.2f}"   
-import pdfkit
 from datetime import datetime
 
 def create_pdf(data):
-    options = {
-    "enable-local-file-access": None
-}
+    
     dt = datetime.strptime(data["pay_period"], "%B %Y")
     formatted_date = dt.strftime("%b_%Y")
 
@@ -777,7 +831,7 @@ def create_pdf(data):
 
     # Canteen (always)
     deduction_items.append(("Canteen", data["canteen"]))
-
+    
     # -------- ROW 2 --------
     if len(deduction_items) > 0:
         name, val = deduction_items.pop(0)
@@ -801,27 +855,54 @@ def create_pdf(data):
             <td>₹ {r(val)}</td>
         </tr>
         """
-
-    # -------- ROW 4 --------
+   # -------- BONUS ROW --------
     if len(deduction_items) > 0:
+
         name, val = deduction_items.pop(0)
+
         deduction_rows += f"""
         <tr>
-            <td>NH & H</td>
-            <td>₹ {r(data["nh_h"])}</td>
+            <td>Bonus</td>
+            <td>₹ {r(data["bonus"])}</td>
             <td>{name}</td>
             <td>₹ {r(val)}</td>
         </tr>
         """
     else:
+
         deduction_rows += f"""
         <tr>
-            <td>NH & H</td>
-            <td>₹ {r(data["nh_h"])}</td>
+            <td>Bonus</td>
+            <td>₹ {r(data["bonus"])}</td>
             <td></td>
             <td></td>
         </tr>
         """
+    # -------- NH&H ROW --------
+    if data["nh_h"] > 0:
+
+        if len(deduction_items) > 0:
+            name, val = deduction_items.pop(0)
+
+            deduction_rows += f"""
+            <tr>
+                <td>NH & H</td>
+                <td>₹ {r(data["nh_h"])}</td>
+                <td>{name}</td>
+                <td>₹ {r(val)}</td>
+            </tr>
+            """
+        else:
+            deduction_rows += f"""
+            <tr>
+                <td>NH & H</td>
+                <td>₹ {r(data["nh_h"])}</td>
+                <td></td>
+                <td></td>
+            </tr>
+            """
+
+
     html = f"""
     <html>
     <head>
@@ -1063,36 +1144,31 @@ def create_pdf(data):
     </body>
     </html>
     """
-
-    import shutil
-    import os
     
+    with sync_playwright() as p:
 
-    def get_wkhtmltopdf_path():
-        # Try system PATH (Linux / hosting)
-        path = shutil.which("wkhtmltopdf")
-        if path:
-            return path
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox"]
+        )
 
-        # Windows fallback
-        win_path = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
-        if os.path.exists(win_path):
-            return win_path
+        page = browser.new_page()
 
-        return None
+        page.set_content(html)
 
+        page.pdf(
+            path=file_name,
+            format="A4",
+            print_background=True,
+            margin={
+                "top": "10mm",
+                "bottom": "10mm",
+                "left": "10mm",
+                "right": "10mm"
+            }
+        )
 
-    wkhtmltopdf_path = get_wkhtmltopdf_path()
-
-    if wkhtmltopdf_path:
-        config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-    else:
-        st.error("wkhtmltopdf not installed")
-        return None
-
-    
-    pdfkit.from_string(html, file_name, configuration=config, options=options)
-
+        browser.close()
     return file_name
     # ---------------- BUILD PDF ----------------
 if st.button("Generate Payslip"):
@@ -1111,6 +1187,7 @@ if st.button("Generate Payslip"):
             "basic_current": basic_current,
             "da_current": da_current,
             "earned_leave": earned_leave,
+            "bonus": bonus,
             "nh_h": nh_h,
             "pf": pf,
             "esic_calc": esic_calc,
@@ -1195,7 +1272,15 @@ if uploaded_excel:
                     da_current = r2((emp["da"]/total_days)*paid_days)
 
                     earned_leave = r2((basic_current+da_current)*0.0481)
-                    nh_h = r2((basic_current+da_current)*0.0288)
+
+                    # BONUS
+                    bonus = r2((basic_current+da_current)*0.0833)
+
+                    # NH&H from Excel (editable)
+                    if "nh_h" in row and not pd.isna(row["nh_h"]):
+                        nh_h = float(row["nh_h"])
+                    else:
+                        nh_h = r2((basic_current+da_current)*0.0288)
 
                    # ---------- PF CALCULATION ----------
                    # ---------- PF CALCULATION (FIXED) ----------
@@ -1239,7 +1324,7 @@ if uploaded_excel:
 
                         col_name = col.lower()
 
-                        if col_name in ["emp_id", "lop_days", "pay_month", "total_days", "paid_days", "pay_date", "pf"]:
+                        if col_name in ["emp_id", "lop_days", "pay_month", "total_days", "paid_days", "pay_date", "pf","nh_h"]:
                             continue
 
                         value = row[col]
@@ -1280,7 +1365,7 @@ if uploaded_excel:
                             deduction_breakup.append((col, abs(value)))
 
                     # ---------------- FINAL ----------------
-                    gross = basic_current + da_current + earned_leave + nh_h + extra_earnings
+                    gross = basic_current + da_current + earned_leave + bonus + nh_h + extra_earnings
 
                     total_deduction = pf + esic_calc + pt + canteen + extra_deductions
 
@@ -1305,6 +1390,7 @@ if uploaded_excel:
                         "basic_current": basic_current,
                         "da_current": da_current,
                         "earned_leave": earned_leave,
+                        "bonus": bonus,
                         "nh_h": nh_h,
                         "pf": pf,
                         "esic_calc": esic_calc,
