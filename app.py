@@ -10,7 +10,9 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from playwright.sync_api import sync_playwright
+import subprocess
 
+subprocess.run(["playwright", "install", "chromium"])
 st.set_page_config(page_title="Go-Green Payroll", layout="wide")
 
 # --------------------------------------------------
@@ -1145,35 +1147,40 @@ def create_pdf(data):
     </html>
     """
     
-    with sync_playwright() as p:
+    try:
+        with sync_playwright() as p:
 
-        browser = p.chromium.launch(
-            headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu",
-                "--single-process"
-            ]
-        )
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                    "--single-process"
+                ]
+            )
 
-        page = browser.new_page()
+            page = browser.new_page()
 
-        page.set_content(html)
+            page.set_content(html, wait_until="networkidle")
 
-        page.pdf(
-            path=file_name,
-            format="A4",
-            print_background=True,
-            margin={
-                "top": "10mm",
-                "bottom": "10mm",
-                "left": "10mm",
-                "right": "10mm"
-            }
-        )
+            page.pdf(
+                path=file_name,
+                format="A4",
+                print_background=True,
+                margin={
+                    "top": "10mm",
+                    "bottom": "10mm",
+                    "left": "10mm",
+                    "right": "10mm"
+                }
+            )
 
-        browser.close()
+            browser.close()
+
+    except Exception as e:
+        st.error(str(e))
+        raise
     return file_name
     # ---------------- BUILD PDF ----------------
 if st.button("Generate Payslip"):
