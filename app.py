@@ -1148,8 +1148,13 @@ def create_pdf(data):
     with sync_playwright() as p:
 
         browser = p.chromium.launch(
+            executable_path="/home/adminuser/.cache/ms-playwright/chromium-*/chrome-linux/chrome",
             headless=True,
-            args=["--no-sandbox"]
+            args=[
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu"
+            ]
         )
 
         page = browser.new_page()
