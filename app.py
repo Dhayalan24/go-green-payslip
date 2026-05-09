@@ -919,11 +919,10 @@ def create_pdf(data):
 
     .container {{
         background: white;
-        padding: 30px;
+        padding: 20px;
         border-radius: 12px;
-        width: 800px;
-        margin: auto;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        width: 100%;
+        box-sizing: border-box;
     }}
 
     .header {{
@@ -1002,9 +1001,8 @@ def create_pdf(data):
     }}
 
     .net-container {{
-        display: flex;
-        justify-content: center;
         margin-top: 20px;
+        margin-bottom: 20px;
     }}
    
     table {{
@@ -1047,6 +1045,15 @@ def create_pdf(data):
         text-align: center;
         font-size: 12px;
         color: gray;
+    }}
+    @page {{
+        size: A4;
+        margin: 10mm;
+    }}
+
+    body {{
+        margin: 0;
+        padding: 0;
     }}
     </style>
     </head>
@@ -1167,6 +1174,7 @@ def create_pdf(data):
             page.pdf(
                 path=file_name,
                 format="A4",
+                 prefer_css_page_size=True,
                 print_background=True,
                 margin={
                     "top": "10mm",
