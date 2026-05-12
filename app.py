@@ -16,6 +16,177 @@ subprocess.run(["playwright", "install", "chromium"])
 st.set_page_config(page_title="Go-Green Payroll", layout="wide")
 
 # --------------------------------------------------
+# LOGIN PAGE
+# --------------------------------------------------
+
+USERNAME = st.secrets["USERNAME"]
+PASSWORD = st.secrets["PASSWORD"]
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+# ---------- IMAGE TO BASE64 ----------
+def get_base64(file_path):
+    with open(file_path, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+# ---------- LOAD IMAGES ----------
+logo_base64 = ""
+bg_base64 = ""
+
+if os.path.exists("logo.png"):
+    logo_base64 = get_base64("logo.png")
+
+if os.path.exists("background.jpg"):
+    bg_base64 = get_base64("background.jpg")
+# ---------- LOGIN ----------
+if not st.session_state.logged_in:
+
+    st.markdown(f"""
+    <style>
+
+    #MainMenu {{visibility:hidden;}}
+    footer {{visibility:hidden;}}
+    header {{visibility:hidden;}}
+
+    [data-testid="stSidebar"] {{
+        display:none;
+    }}
+
+    .stApp {{
+        background:
+        linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+        url("data:image/jpg;base64,{bg_base64}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }}
+
+    .login-box {{
+        background: rgba(255,255,255,0.12);
+        backdrop-filter: blur(14px);
+        padding: 40px;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0px 8px 32px rgba(0,0,0,0.3);
+        text-align: center;
+        margin-top: 80px;
+    }}
+
+    .login-title {{
+    font-size: 38px;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}}
+
+
+# --------------------------------------------------
+    .login-subtitle {{
+        color: #f3f4f6;
+        margin-bottom: 30px;
+        font-size: 15px;
+    }}
+
+    /* INPUT LABELS */
+    label {{
+        color: white !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
+    }}
+
+    /* INPUT BOX */
+    .stTextInput input {{
+        background: rgba(255,255,255,0.95) !important;
+        color: #111827 !important;
+        border-radius: 12px !important;
+        border: 2px solid rgba(255,255,255,0.4) !important;
+        padding: 14px !important;
+        font-size: 15px !important;
+        font-weight: 500 !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }}
+
+    /* PLACEHOLDER */
+    .stTextInput input::placeholder {{
+        color: #6b7280 !important;
+        opacity: 1 !important;
+    }}  
+
+    /* PASSWORD FIELD */
+    input[type="password"] {{
+        letter-spacing: 2px;
+    }}
+
+    /* INPUT FOCUS */
+    .stTextInput input:focus {{
+        border: 2px solid #22c55e !important;
+        box-shadow: 0 0 0 3px rgba(34,197,94,0.3) !important;
+    }}
+
+    .stButton button {{
+        width: 100%;
+        background: linear-gradient(135deg,#16a34a,#22c55e);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 16px;
+        font-weight: 600;
+    }}
+
+    .stButton button:hover {{
+        background: linear-gradient(135deg,#15803d,#16a34a);
+    }}
+
+    </style>
+    """, unsafe_allow_html=True)
+
+    # CENTER LOGIN CARD
+    left, center, right = st.columns([1,1,1])
+
+    with center:
+
+        st.markdown(f"""
+        <div class="login-box">
+            <img src="data:image/png;base64,{logo_base64}" width="120">
+            <div class="login-title">GO-GREEN</div>
+            <div class="login-subtitle">Payroll Management System</div>
+        """, unsafe_allow_html=True)
+
+        username_input = st.text_input(
+            "Username",
+            placeholder="Enter Username"
+        )
+
+        password_input = st.text_input(
+            "Password",
+            type="password",
+            placeholder="Enter Password"
+        )
+
+        login_button = st.button("LOGIN")
+
+        if login_button:
+
+            if username_input == USERNAME and password_input == PASSWORD:
+                st.session_state.logged_in = True
+                st.rerun()
+            else:
+                st.error("Invalid Username or Password")
+
+        st.markdown("""
+            <br>
+            <div style="color:white;font-size:12px;">
+                GO-GREEN © 2026
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.stop()
+# --------------------------------------------------
 # UI DESIGN
 # --------------------------------------------------
 st.markdown(""" 
